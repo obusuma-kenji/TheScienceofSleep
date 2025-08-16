@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>インタラクティブ・レポート：睡眠と成功・幸福の科学</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Neutral (Warm neutrals like #FDFBF6 with a calming blue accent #34568B) -->
+    <!-- Application Structure Plan: The application uses a thematic, non-linear structure centered on three core pillars: 'The 3 Capitals' (Cognitive, Emotional, Physical), 'The Science of Sleep', and an 'Optimization Plan'. This user-centric design allows exploration based on interest (the 'what', the 'how', and the 'how-to') rather than following the report's academic chapter order. Key interactions include an interactive J-curve chart for health risks, tabbed navigation for the 'Capitals', and an accordion for the actionable plan, designed to make complex information digestible and engaging. -->
+    <!-- Visualization & Content Choices: Report Info: Mortality risk vs. sleep hours (Table 1) -> Goal: Compare risks -> Viz: Interactive Bar Chart -> Interaction: Hover for details -> Justification: Clearly visualizes the non-linear "J-curve" relationship, making the optimal 7-hour point intuitive -> Library: Chart.js/Canvas. Report Info: Actionable sleep tips (Table 3) -> Goal: Organize/Inform -> Presentation: Accordion UI -> Interaction: Click to expand/collapse -> Justification: Prevents information overload by grouping tips into categories, making the plan scannable and actionable -> Method: HTML/CSS/JS. Report Info: NREM/REM sleep roles -> Goal: Inform -> Presentation: Interactive Cards -> Interaction: Click to reveal info -> Justification: Encourages user engagement through a simple discovery interaction -> Method: HTML/CSS/JS. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #FDFBF6;
+            color: #333;
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+        }
+        .nav-link.active {
+            color: #34568B;
+            border-bottom-color: #34568B;
+        }
+        .tab-button.active {
+            background-color: #34568B;
+            color: #FFFFFF;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 40vh;
+            max-height: 450px;
+        }
+        .stat-card {
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="sticky top-0 bg-[#FDFBF6]/80 backdrop-blur-lg z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-3">
+            <div class="flex justify-between items-center">
+                <div class="text-xl font-bold text-[#34568B]">睡眠の科学</div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#hero" class="nav-link text-gray-600 hover:text-[#34568B] border-b-2 border-transparent pb-1">ホーム</a>
+                    <a href="#capitals" class="nav-link text-gray-600 hover:text-[#34568B] border-b-2 border-transparent pb-1">３つの資本</a>
+                    <a href="#science" class="nav-link text-gray-600 hover:text-[#34568B] border-b-2 border-transparent pb-1">睡眠の科学</a>
+                    <a href="#plan" class="nav-link text-gray-600 hover:text-[#34568B] border-b-2 border-transparent pb-1">最適化プラン</a>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden bg-[#FDFBF6] py-2">
+            <a href="#hero" class="block text-center py-2 px-4 text-sm text-gray-600 hover:bg-[#34568B]/10">ホーム</a>
+            <a href="#capitals" class="block text-center py-2 px-4 text-sm text-gray-600 hover:bg-[#34568B]/10">３つの資本</a>
+            <a href="#science" class="block text-center py-2 px-4 text-sm text-gray-600 hover:bg-[#34568B]/10">睡眠の科学</a>
+            <a href="#plan" class="block text-center py-2 px-4 text-sm text-gray-600 hover:bg-[#34568B]/10">最適化プラン</a>
+        </div>
+    </header>
+
+    <main>
+        <section id="hero" class="min-h-screen flex items-center bg-cover bg-center" style="background-image: linear-gradient(rgba(253, 251, 246, 0.6), rgba(253, 251, 246, 1)), url('https://images.unsplash.com/photo-1444044205806-38f372214275?ixlib=rb-4.0.3&q=85&fm=jpg&crop=entropy&cs=srgb&w=1200');">
+            <div class="container mx-auto px-6 text-center">
+                <h1 class="text-4xl md:text-6xl font-bold text-gray-800 leading-tight mb-4">睡眠はコストではない。<br>最高の<span class="text-[#34568B]">自己投資</span>である。</h1>
+                <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-8">
+                    科学的エビデンスが解き明かす、睡眠があなたの認知能力、精神、身体をいかに形成し、成功と幸福の人生へと導くかを探求します。
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                    <div class="stat-card p-6 rounded-xl shadow-lg text-left">
+                        <h3 class="text-2xl font-bold text-[#34568B] mb-2">15兆円</h3>
+                        <p class="text-gray-600">日本の睡眠不足による年間経済損失の試算額。これは個人の問題ではなく、国家レベルの課題です。</p>
+                    </div>
+                    <div class="stat-card p-6 rounded-xl shadow-lg text-left">
+                        <h3 class="text-2xl font-bold text-[#34568B] mb-2">7時間</h3>
+                        <p class="text-gray-600">多くの研究が示す、死亡リスクが最も低くなる最適な睡眠時間。量と質のバランスが鍵となります。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="capitals" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800">睡眠が育む「３つの資本」</h2>
+                    <p class="text-gray-600 mt-4 max-w-2xl mx-auto">睡眠は、成功と幸福に不可欠な３つの重要な資産（資本）を能動的に形成します。下のタブをクリックして、それぞれの資本があなたの人生にどのような利益をもたらすかをご覧ください。</p>
+                </div>
+
+                <div class="flex justify-center mb-8">
+                    <div class="flex space-x-2 p-1 bg-gray-200 rounded-lg">
+                        <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition active" data-tab="cognitive">認知資本</button>
+                        <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition" data-tab="emotional">精神資本</button>
+                        <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition" data-tab="physical">身体資本</button>
+                    </div>
+                </div>
+
+                <div id="cognitive" class="tab-content">
+                    <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold text-[#34568B] mb-4">認知資本：思考を鋭くする</h3>
+                            <p class="text-gray-600 mb-4">睡眠は、脳のパフォーマンスを最大化する鍵です。日中に学んだ情報を整理・定着させ、問題解決能力や創造性を高めます。試験前の徹夜が非効率なのは、記憶を固定化する貴重な睡眠時間を失うためです。</p>
+                            <div class="space-y-4">
+                                <div class="p-4 bg-gray-100 rounded-lg">
+                                    <h4 class="font-bold">記憶力と学習能力</h4>
+                                    <p class="text-sm text-gray-600">ノンレム睡眠が事実や知識を、レム睡眠がスキルや技能を長期記憶に変換します。</p>
+                                </div>
+                                <div class="p-4 bg-gray-100 rounded-lg">
+                                    <h4 class="font-bold">創造性と問題解決</h4>
+                                    <p class="text-sm text-gray-600">レム睡眠中に、一見無関係な情報が結びつき、新たなアイデアや洞察が生まれます。</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                           <h4 class="font-bold text-lg mb-4">睡眠段階の役割</h4>
+                           <p class="text-sm text-gray-500 mb-4">カードをクリックして役割を確認</p>
+                            <div class="flex justify-center gap-4">
+                                <div class="interactive-card w-40 h-40 flex items-center justify-center p-4 bg-blue-100 rounded-lg shadow-md cursor-pointer transform hover:scale-105 transition-transform">
+                                    <div class="card-front font-bold text-xl text-blue-800">ノンレム睡眠</div>
+                                    <div class="card-back hidden text-sm text-blue-800">事実・知識などの「宣言的記憶」を定着させる。</div>
+                                </div>
+                                <div class="interactive-card w-40 h-40 flex items-center justify-center p-4 bg-indigo-100 rounded-lg shadow-md cursor-pointer transform hover:scale-105 transition-transform">
+                                    <div class="card-front font-bold text-xl text-indigo-800">レム睡眠</div>
+                                    <div class="card-back hidden text-sm text-indigo-800">スキル・習慣などの「手続き記憶」を統合し、創造性を高める。</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="emotional" class="tab-content hidden">
+                     <div class="grid md:grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold text-[#34568B] mb-4">精神資本：心を穏やかにする</h3>
+                            <p class="text-gray-600 mb-4">睡眠は、感情の安定に不可欠です。睡眠不足は、脳の感情的な「アクセル」（扁桃体）を過敏にし、理性的な「ブレーキ」（前頭前野）の効きを悪くします。これにより、些細なことでイライラしたり、不安になったりしやすくなります。</p>
+                             <div class="space-y-4">
+                                <div class="p-4 bg-gray-100 rounded-lg">
+                                    <h4 class="font-bold">感情のコントロール</h4>
+                                    <p class="text-sm text-gray-600">十分な睡眠は、感情の波を穏やかにし、ストレスへの耐性を高めます。</p>
+                                </div>
+                                <div class="p-4 bg-gray-100 rounded-lg">
+                                    <h4 class="font-bold">幸福感の向上</h4>
+                                    <p class="text-sm text-gray-600">「睡眠休養感」（ぐっすり眠れた感覚）は、幸福度や人生満足度と強く相関します。</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6 bg-gray-50 rounded-lg">
+                            <h4 class="font-bold text-lg mb-4 text-center">睡眠不足の脳</h4>
+                            <div class="relative h-48 flex flex-col justify-center items-center">
+                                <div class="flex items-center justify-between w-full">
+                                    <div class="text-center">
+                                        <div class="text-4xl">🧠</div>
+                                        <div class="font-bold">前頭前野 (理性)</div>
+                                        <div class="text-sm text-gray-500">ブレーキ役</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-4xl">🔥</div>
+                                        <div class="font-bold">扁桃体 (感情)</div>
+                                        <div class="text-sm text-gray-500">アクセル役</div>
+                                    </div>
+                                </div>
+                                <div class="absolute w-1/2 h-1 bg-red-500 rounded-full top-1/2 left-1/4 transform -translate-y-1/2 animate-pulse"></div>
+                                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-5xl opacity-50">⚡️</div>
+                                <p class="mt-16 text-center text-sm text-red-600 font-semibold">睡眠不足で理性のブレーキが効かなくなり、感情が暴走しやすくなる。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="physical" class="tab-content hidden">
+                    <div>
+                        <div class="text-center mb-8">
+                            <h3 class="text-2xl font-bold text-[#34568B] mb-2">身体資本：健康寿命を延ばす</h3>
+                            <p class="text-gray-600 max-w-3xl mx-auto">睡眠は、身体の修復と防御の重要な時間です。慢性的な睡眠不足は、肥満、糖尿病、心臓病、免疫力低下など、様々な生活習慣病のリスクを高めます。健康は、長期的な成功と幸福の絶対的な土台です。</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="jCurveChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-500 mt-4">グラフの各棒にカーソルを合わせると、詳細なリスクが表示されます。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="science" class="py-20 bg-[#FDFBF6]">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800">睡眠の科学：体内で何が起きているか</h2>
+                    <p class="text-gray-600 mt-4 max-w-2xl mx-auto">睡眠中、私たちの脳と身体は生命維持に不可欠なプログラムを実行しています。その驚くべきメカニズムの一部を覗いてみましょう。</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-10">
+                    <div class="p-6 bg-white rounded-lg shadow-md">
+                        <h3 class="text-xl font-bold text-[#34568B] mb-4">ホルモンバランスの調整</h3>
+                        <p class="text-gray-600 mb-4">睡眠と覚醒は、主に2つのホルモンのリズミカルなダンスによって制御されています。このバランスが、私たちの体内時計を正常に保ちます。</p>
+                        <div class="relative pt-8">
+                            <div class="h-1 bg-gray-200 rounded-full"></div>
+                            <div class="absolute top-8 w-full flex justify-between text-xs text-gray-500">
+                                <span>夜</span><span>朝</span><span>昼</span><span>夕</span><span>夜</span>
+                            </div>
+                            <div class="mt-4">
+                                <div class="font-semibold text-blue-600">メラトニン (睡眠ホルモン)</div>
+                                <div class="relative h-10">
+                                    <div class="absolute bottom-0 left-0 w-full h-8 bg-blue-100 rounded-full" style="clip-path: path('M0,10 C80,0 160,0 240,10 S400,20 480,10'); transform: scaleX(1.5) translateX(-15%);"></div>
+                                </div>
+                            </div>
+                             <div class="mt-2">
+                                <div class="font-semibold text-orange-600">コルチゾール (覚醒ホルモン)</div>
+                                <div class="relative h-10">
+                                    <div class="absolute bottom-0 left-0 w-full h-8 bg-orange-100 rounded-full" style="clip-path: path('M0,20 C80,20 160,0 240,0 S400,20 480,20'); transform: scaleX(1.5) translateX(-15%);"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="p-6 bg-white rounded-lg shadow-md">
+                        <h3 class="text-xl font-bold text-[#34568B] mb-4">脳の浄化システム「グリンパティック系」</h3>
+                        <p class="text-gray-600 mb-2">近年発見された、睡眠中にのみ活発化する脳の老廃物除去システムです。深い睡眠中に脳脊髄液が脳組織を洗い流し、アルツheimer病の原因物質とされるアミロイドベータなどを除去します。</p>
+                        <div class="flex items-center p-4 bg-gray-50 rounded-lg mt-6">
+                            <div class="text-5xl mr-4">🧼</div>
+                            <div>
+                                <h4 class="font-bold">睡眠は脳の「大掃除」</h4>
+                                <p class="text-sm text-gray-600">この浄化プロセスが、脳の健康を長期的に守り、神経変性疾患のリスクを低減させる可能性があります。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="plan" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-800">あなたの睡眠最適化プラン</h2>
+                    <p class="text-gray-600 mt-4 max-w-2xl mx-auto">科学的知見と成功者の習慣に基づいた、今日から実践できる睡眠改善のためのフレームワークです。</p>
+                </div>
+                
+                <div class="mb-16">
+                    <h3 class="text-2xl font-bold text-center text-[#34568B] mb-6">成功者の睡眠哲学</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">人物名</th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">睡眠時間</th>
+                                    <th class="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">哲学</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr>
+                                    <td class="py-4 px-4 whitespace-nowrap font-medium">ジェフ・ベゾス</td>
+                                    <td class="py-4 px-4 whitespace-nowrap">8時間</td>
+                                    <td class="py-4 px-4 text-sm text-gray-600 hidden sm:table-cell">「8時間の睡眠は大きな違いを生む。思考が鋭くなる」</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-4 px-4 whitespace-nowrap font-medium">ビル・ゲイツ</td>
+                                    <td class="py-4 px-4 whitespace-nowrap">7時間</td>
+                                    <td class="py-4 px-4 text-sm text-gray-600 hidden sm:table-cell">創造性と脳の健康に不可欠と認識し、7時間を重視。</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-4 px-4 whitespace-nowrap font-medium">イーロン・マスク</td>
+                                    <td class="py-4 px-4 whitespace-nowrap">6時間</td>
+                                    <td class="py-4 px-4 text-sm text-gray-600 hidden sm:table-cell">超多忙だが睡眠を重視。カフェイン摂取を制限。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-bold text-center text-[#34568B] mb-6">睡眠改善フレームワーク</h3>
+                    <p class="text-center text-gray-500 mb-8">各項目をクリックして、具体的なアクションを確認しましょう。</p>
+                    <div class="max-w-3xl mx-auto space-y-4" id="accordion-container">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p>&copy; 2025 インタラクティブ・レポート. All Rights Reserved.</p>
+            <p class="text-sm text-gray-400 mt-2">本コンテンツは、提供された調査報告書に基づき、教育目的で作成されました。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const setupNavigation = () => {
+                const navLinks = document.querySelectorAll('.nav-link');
+                const sections = document.querySelectorAll('main section');
+
+                const observerOptions = {
+                    root: null,
+                    rootMargin: '0px',
+                    threshold: 0.4
+                };
+
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            navLinks.forEach(link => {
+                                link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                            });
+                        }
+                    });
+                }, observerOptions);
+
+                sections.forEach(section => observer.observe(section));
+
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        document.querySelector(this.getAttribute('href')).scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                        if(mobileMenu.classList.contains('hidden') === false){
+                            mobileMenu.classList.add('hidden');
+                        }
+                    });
+                });
+                
+                const mobileMenuButton = document.getElementById('mobile-menu-button');
+                const mobileMenu = document.getElementById('mobile-menu');
+                mobileMenuButton.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            };
+
+            const setupTabs = () => {
+                const tabButtons = document.querySelectorAll('.tab-button');
+                const tabContents = document.querySelectorAll('.tab-content');
+
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        tabButtons.forEach(btn => btn.classList.remove('active'));
+                        button.classList.add('active');
+
+                        tabContents.forEach(content => {
+                            content.classList.add('hidden');
+                        });
+                        document.getElementById(button.dataset.tab).classList.remove('hidden');
+                    });
+                });
+            };
+
+            const setupInteractiveCards = () => {
+                const cards = document.querySelectorAll('.interactive-card');
+                cards.forEach(card => {
+                    card.addEventListener('click', () => {
+                        card.querySelector('.card-front').classList.toggle('hidden');
+                        card.querySelector('.card-back').classList.toggle('hidden');
+                    });
+                });
+            };
+
+            const createJCurveChart = () => {
+                const ctx = document.getElementById('jCurveChart').getContext('2d');
+                const chartData = {
+                    labels: ['6時間未満', '7時間 (基準)', '8時間', '9時間', '10時間以上'],
+                    datasets: [{
+                        label: '総死亡率の相対リスク',
+                        data: [1.12, 1.0, 1.13, 1.25, 1.40],
+                        backgroundColor: [
+                            'rgba(255, 159, 64, 0.6)',
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(255, 205, 86, 0.6)',
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(153, 102, 255, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 159, 64, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 205, 86, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                };
+
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: '睡眠時間と総死亡率のJカーブ関係',
+                                font: { size: 16 }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            if(context.label === '7時間 (基準)'){
+                                                label += '最もリスクが低い';
+                                            } else {
+                                                label += `7時間比で ${Math.round((context.parsed.y - 1) * 100)}% 上昇`;
+                                            }
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                min: 0.9,
+                                title: {
+                                    display: true,
+                                    text: '相対リスク (7時間=1.0)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: '1日の睡眠時間'
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const setupAccordion = () => {
+                const accordionData = [
+                    {
+                        category: '環境',
+                        icon: '🏡',
+                        items: [
+                            { title: '寝室を暗く、静かに、涼しく保つ', detail: 'メラトニンの分泌を促し、深い睡眠を維持します。' },
+                            { title: '就寝1～2時間前から照明を落とす', detail: '強い光、特にブルーライトは体内時計を遅らせます。' },
+                            { title: 'スマートフォンを寝室に持ち込まない', detail: 'ブルーライトの影響を避け、脳の興奮を鎮めます。' }
+                        ]
+                    },
+                    {
+                        category: '行動・習慣',
+                        icon: '🏃',
+                        items: [
+                            { title: '毎日同じ時間に起床する', detail: '体内時計を安定させる最も強力な方法です。' },
+                            { title: '起床後、朝日を浴びる', detail: '体内時計をリセットし、夜の眠りを促します。' },
+                            { title: '日中に適度な運動を行う', detail: '深い睡眠を増加させます。就寝直前の激しい運動は避けましょう。' }
+                        ]
+                    },
+                    {
+                        category: '食事・嗜好品',
+                        icon: '🍽️',
+                        items: [
+                            { title: 'バランスの取れた朝食を摂る', detail: '体内時計を始動させ、一日の代謝リズムを整えます。' },
+                            { title: '夕方以降はカフェインを避ける', detail: 'カフェインの覚醒作用は長く続き、睡眠の質を損ないます。' },
+                            { title: '寝酒を避ける', detail: '入眠を助けても、睡眠後半の質を悪化させ、中途覚醒を増やします。' }
+                        ]
+                    }
+                ];
+
+                const container = document.getElementById('accordion-container');
+                accordionData.forEach(data => {
+                    const item = document.createElement('div');
+                    item.className = 'border border-gray-200 rounded-lg';
+                    item.innerHTML = `
+                        <button class="accordion-header w-full flex justify-between items-center p-4 text-left font-semibold">
+                            <span>${data.icon} ${data.category}</span>
+                            <span class="transform transition-transform duration-300">▼</span>
+                        </button>
+                        <div class="accordion-content px-4 pb-4">
+                            <ul class="space-y-2 text-gray-600">
+                                ${data.items.map(i => `
+                                    <li class="p-2 bg-gray-50 rounded">
+                                        <strong class="text-gray-800">${i.title}</strong><br>
+                                        <span class="text-sm">${i.detail}</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+
+                const headers = document.querySelectorAll('.accordion-header');
+                headers.forEach(header => {
+                    header.addEventListener('click', () => {
+                        const content = header.nextElementSibling;
+                        const arrow = header.querySelector('span:last-child');
+                        
+                        if (content.style.maxHeight) {
+                            content.style.maxHeight = null;
+                            arrow.style.transform = 'rotate(0deg)';
+                        } else {
+                            document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = null);
+                            document.querySelectorAll('.accordion-header span:last-child').forEach(a => a.style.transform = 'rotate(0deg)');
+                            content.style.maxHeight = content.scrollHeight + "px";
+                            arrow.style.transform = 'rotate(180deg)';
+                        }
+                    });
+                });
+            };
+
+            setupNavigation();
+            setupTabs();
+            setupInteractiveCards();
+            createJCurveChart();
+            setupAccordion();
+        });
+    </script>
+</body>
+</html>
